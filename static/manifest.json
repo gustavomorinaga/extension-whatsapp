@@ -1,0 +1,42 @@
+{
+	"manifest_version": 3,
+	"name": "Extension for WhatsApp",
+	"description": "Demo extension for WhatsApp, using SvelteKit",
+	"version": "0.0.1",
+
+	"permissions": ["activeTab", "scripting", "storage"],
+	"host_permissions": ["https://web.whatsapp.com/*"],
+	"action": {
+		"default_title": "Click to open the panel",
+		"default_icon": {
+			"128": "assets/favicon.png"
+		}
+	},
+	"icons": {
+		"128": "assets/favicon.png"
+	},
+	"background": {
+		"service_worker": "extension/background.js"
+	},
+	"content_scripts": [
+		{
+			"all_frames": true,
+			"js": ["extension/content.js"],
+			"matches": ["https://web.whatsapp.com/*"]
+		}
+	],
+	"content_security_policy": {
+		"extension_pages": "img-src 'self' data:; script-src 'self'; object-src 'self';"
+	},
+	"web_accessible_resources": [
+		{
+			"matches": ["<all_urls>"],
+			"resources": [
+				"index.html",
+				"assets/favicon.png",
+				"extension/scrap.js",
+				"extension/wa-overrides.css"
+			]
+		}
+	]
+}

@@ -1,0 +1,6 @@
+/** Resolves "green bar overlap" issue. */
+@media screen and (min-width: 1441px) {
+	#app > div:after {
+		height: 0;
+	}
+}

@@ -1,0 +1,61 @@
+@import './theme.pcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/roboto-mono';
+
+@layer base {
+	:root {
+		--base-font-size: 14px;
+		--font-sans: 'Inter Variable', sans-serif;
+		--font-mono: 'Roboto Mono Variable', monospace;
+	}
+
+	* {
+		@apply min-h-0 min-w-0 overscroll-none;
+
+		&:where(
+				.overflow-auto,
+				.overflow-x-auto,
+				.overflow-y-auto,
+				.overflow-scroll,
+				.overflow-x-scroll,
+				.overflow-y-scroll
+			) {
+			@apply scrollbar scrollbar-thumb-foreground/40;
+
+			&::-webkit-scrollbar-thumb {
+				background-clip: content-box;
+				border: 0.25rem solid transparent;
+				border-radius: 1rem;
+			}
+		}
+
+		&:where(.overflow-x-autom, .overflow-x-scroll) {
+			&::-webkit-scrollbar-track {
+				border-top: 1px solid hsl(var(--border) / 1);
+			}
+		}
+
+		&:where(.overflow-y-auto, .overflow-y-scroll) {
+			&::-webkit-scrollbar-track {
+				border-left: 1px solid hsl(var(--border) / 1);
+			}
+		}
+	}
+
+	html {
+		font-size: var(--base-font-size);
+	}
+
+	body {
+		@apply overflow-y-scroll antialiased;
+	}
+
+	input[type='search'] {
+		&::-webkit-search-decoration,
+		&::-webkit-search-cancel-button,
+		&::-webkit-search-results-button,
+		&::-webkit-search-results-decoration {
+			display: none;
+		}
+	}
+}
