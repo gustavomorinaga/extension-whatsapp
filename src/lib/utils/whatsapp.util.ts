@@ -1,4 +1,5 @@
-import { executeScript } from '$lib/utils';
+import mime from 'mime-types';
+import { decryptMedia, executeScript } from '$lib/utils';
 import type { Chat, ChatId, Contact, Message } from '$lib/ts';
 
 export type TWhatsAppData = {
@@ -7,6 +8,12 @@ export type TWhatsAppData = {
 	contact?: Contact;
 	messages: Array<Message>;
 	phoneNumber: string | Array<string>;
+};
+
+export type TWhatsAppMedia = {
+	filename: string;
+	filetype: string;
+	mediaBase64: string;
 };
 
 /**
@@ -18,7 +25,12 @@ export type TWhatsAppWeb = {
 	 * @returns A promise that resolves with the WhatsApp data.
 	 */
 	getData: () => Promise<TWhatsAppData | undefined>;
-
+	/**
+	 * Processes the media message.
+	 * @param message - The media message to be processed.
+	 * @returns A promise that resolves with the processed media.
+	 */
+	processMedia: (message: Message) => Promise<TWhatsAppMedia | undefined>;
 	/**
 	 * Writes text in the current chat.
 	 * @param text - The text to be written in the chat.
@@ -45,12 +57,29 @@ export const whatsAppWeb: TWhatsAppWeb = {
 			const contact = await executeScript(
 				() => window.retrieveObject<Contact | undefined>('contact'),
 				[contactID]
-			);
-			if (!contact || (contact && !(contact.name || contact.pushname))) return undefined;
+			).then((contact) => {
+				if (!contact || (contact && !(contact.name || contact.pushname))) return undefined;
+				return contact;
+			});
 
 			return { chat, chatID, contact, messages, phoneNumber };
 		} catch (error) {
 			console.error('Error retrieving WhatsApp data:', error);
+			return undefined;
+		}
+	},
+	processMedia: async (message) => {
+		try {
+			if (!message.mimetype) return undefined;
+
+			const filename = `${message.t}.${mime.extension(message.mimetype)}`;
+			const filetype = mime.contentType(filename) || 'application/octet-stream';
+			const mediaData = await decryptMedia(message);
+			const mediaBase64 = `data:${message.mimetype};base64,${mediaData.toString('base64')}`;
+
+			return { filename, filetype, mediaBase64 };
+		} catch (error) {
+			console.error('Error processing message:', error);
 			return undefined;
 		}
 	},

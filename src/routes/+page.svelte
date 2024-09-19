@@ -8,6 +8,7 @@
 
 <script lang="ts">
 	let data: Awaited<ReturnType<typeof whatsAppWeb.getData>>;
+	let medias: Array<Awaited<ReturnType<typeof whatsAppWeb.processMedia>>>;
 	let state: 'idle' | 'loading' | 'success' | Error = 'idle';
 
 	async function getData() {
@@ -15,17 +16,32 @@
 
 		try {
 			data = await whatsAppWeb.getData();
+			if (data?.messages?.length) {
+				const mediaMessages = data.messages.filter(
+					(message) => message.mimetype && message.type !== 'sticker'
+				);
+				if (!mediaMessages.length) medias = [];
+				else {
+					const results = await Promise.allSettled(mediaMessages.map(whatsAppWeb.processMedia));
+					medias = results
+						.filter((result) => result.status === 'fulfilled')
+						.map((result) => result.value);
+				}
+			}
+
 			state = 'success';
 		} catch (error) {
+			data = undefined;
+			medias = [];
 			state = error as Error;
 		}
 	}
 
-	$: if (data) console.log('Extension for WhatsApp', data);
+	$: if (data) console.log('📞 Extension for WhatsApp', data);
 </script>
 
-<section class="flex flex-1 flex-col">
-	<Center class="flex-1 gap-8">
+<article class="relative flex flex-1 flex-col gap-4 py-8">
+	<section class="sticky top-0 -mx-8 -mt-8 flex flex-col gap-8 bg-background p-8">
 		<header class="text-center">
 			<h1 class="mb-4 text-2xl font-extrabold">Extension for WhatsApp</h1>
 			<p class="text-balance text-sm text-muted-foreground">
@@ -41,12 +57,45 @@
 				Get Data
 			{/if}
 		</Button>
+	</section>
 
-		{#if state === 'success'}
-			<div class="flex items-center">
-				<Info class="mr-2 size-4 shrink-0" />
-				<p>Check the console to see the data.</p>
-			</div>
+	{#if state === 'success'}
+		{#if data}
+			<section class="-mx-8 max-h-[30svh] overflow-y-auto border-y px-8 py-4">
+				<pre class="grid whitespace-break-spaces break-words">
+					<code>{JSON.stringify(data, null, 2)}</code>
+				</pre>
+			</section>
+		{:else}
+			<Center>
+				<Info class="h-12 w-12 text-muted-foreground" />
+				<p class="text-center text-muted-foreground">No data found.</p>
+			</Center>
 		{/if}
-	</Center>
-</section>
+
+		{#if medias?.length}
+			<section class="flex flex-col gap-4">
+				{#each medias as media}
+					{#if media}
+						{#if media.filetype.startsWith('audio')}
+							<audio controls>
+								<source src={media.mediaBase64} type={media.filetype} />
+							</audio>
+						{/if}
+
+						{#if media.filetype.startsWith('image')}
+							<img src={media.mediaBase64} alt={media.filename} />
+						{/if}
+
+						{#if media.filetype.startsWith('video')}
+							<video controls>
+								<source src={media.mediaBase64} type={media.filetype} />
+								<track kind="captions" />
+							</video>
+						{/if}
+					{/if}
+				{/each}
+			</section>
+		{/if}
+	{/if}
+</article>

@@ -26,7 +26,7 @@
 		}
 	],
 	"content_security_policy": {
-		"extension_pages": "img-src 'self'; script-src 'self'; object-src 'self';"
+		"extension_pages": "object-src 'self'; script-src 'self';"
 	},
 	"web_accessible_resources": [
 		{
