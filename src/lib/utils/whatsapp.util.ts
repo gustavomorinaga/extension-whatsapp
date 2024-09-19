@@ -25,48 +25,47 @@ export type TWhatsAppWeb = {
 	 * @returns A promise that resolves when the text is written.
 	 */
 	writeInChat: (text: string) => Promise<void>;
-	// processMessage: (message: Message) => Promise<void>;
 };
 
 /**
  * Represents the WhatsApp Web object.
  */
 export const whatsAppWeb: TWhatsAppWeb = {
-	getData: () => {
-		return new Promise((resolve) => {
-			executeScript(() => window.retrieveObject<Chat | undefined>('chat')).then(async (chat) => {
-				if (!chat) return resolve(undefined);
+	getData: async () => {
+		try {
+			const chat = await executeScript(() => window.retrieveObject<Chat | undefined>('chat'));
+			if (!chat) return undefined;
 
-				const chatID = chat.id;
-				const messages = chat.msgs;
-				const [contactID] = chat.id.split('@');
-				const phoneNumbers = contactID.split('-').map((num) => `+${num}`);
-				const phoneNumber = phoneNumbers.length === 1 ? phoneNumbers[0] : phoneNumbers;
+			const chatID = chat.id;
+			const messages = chat.msgs;
+			const [contactID] = chat.id.split('@');
+			const phoneNumbers = contactID.split('-').map((num) => `+${num}`);
+			const phoneNumber = phoneNumbers.length === 1 ? phoneNumbers[0] : phoneNumbers;
 
-				const contact = await executeScript(
-					() => window.retrieveObject<Contact | undefined>('contact'),
-					[contactID]
-				).then((contact) => {
-					if (!contact || (contact && !(contact.name || contact.pushname))) return undefined;
-					return contact;
-				});
+			const contact = await executeScript(
+				() => window.retrieveObject<Contact | undefined>('contact'),
+				[contactID]
+			);
+			if (!contact || (contact && !(contact.name || contact.pushname))) return undefined;
 
-				resolve({ chat, chatID, contact, messages, phoneNumber });
-			});
-		});
+			return { chat, chatID, contact, messages, phoneNumber };
+		} catch (error) {
+			console.error('Error retrieving WhatsApp data:', error);
+			return undefined;
+		}
 	},
-	writeInChat: (text) => {
-		return new Promise((resolve) => {
-			executeScript(() => {
-				const dataTransfer = new DataTransfer();
-				const input = document.querySelector('#main footer [contenteditable~=true]');
-				const clipboardEvent = new ClipboardEvent('paste', {
-					bubbles: true,
-					clipboardData: dataTransfer
-				});
-				dataTransfer.setData('text', text.replace("'", '"'));
-				input?.dispatchEvent(clipboardEvent);
-			}).then(() => resolve());
-		});
+	writeInChat: async (text) => {
+		try {
+			const dataTransfer = new DataTransfer();
+			const input = document.querySelector('#main footer [contenteditable~=true]');
+			const clipboardEvent = new ClipboardEvent('paste', {
+				bubbles: true,
+				clipboardData: dataTransfer
+			});
+			dataTransfer.setData('text', text.replace("'", '"'));
+			input?.dispatchEvent(clipboardEvent);
+		} catch (error) {
+			console.error('Error writing in chat:', error);
+		}
 	}
 };

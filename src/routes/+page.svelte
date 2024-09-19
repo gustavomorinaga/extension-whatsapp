@@ -14,11 +14,7 @@
 		state = 'loading';
 
 		try {
-			const chat = await whatsAppWeb.getData();
-			if (!chat) throw new Error('No chat is open.');
-
-			data = chat;
-
+			data = await whatsAppWeb.getData();
 			state = 'success';
 		} catch (error) {
 			state = error as Error;
@@ -26,7 +22,6 @@
 	}
 
 	$: if (data) console.log('Extension for WhatsApp', data);
-	$: if (state instanceof Error) console.warn('Extension for WhatsApp', state);
 </script>
 
 <section class="flex flex-1 flex-col">
