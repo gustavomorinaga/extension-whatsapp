@@ -23,6 +23,7 @@
 	"devDependencies": {
 		"@fontsource-variable/inter": "5.0.18",
 		"@fontsource-variable/roboto-mono": "5.0.19",
+		"@open-wa/wa-automate-types-only": "4.72.5",
 		"@sveltejs/adapter-auto": "3.2.1",
 		"@sveltejs/kit": "2.5.10",
 		"@sveltejs/vite-plugin-svelte": "3.1.0",

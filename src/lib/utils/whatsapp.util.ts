@@ -1,45 +1,23 @@
 import { executeScript } from '$lib/utils';
-import type { TWhatsAppChat, TWhatsAppContact, TWhatsAppMessage } from '$lib/ts';
+import type { Chat, ChatId, Contact, Message } from '$lib/ts';
+
+export type TWhatsAppData = {
+	chat: Chat;
+	chatID: ChatId;
+	contact?: Contact;
+	messages: Array<Message>;
+	phoneNumber: string | Array<string>;
+};
 
 /**
- * Represents the interface for interacting with WhatsApp Web.
+ * Represents the WhatsApp Web object.
  */
-export interface IWhatsAppWeb {
+export type TWhatsAppWeb = {
 	/**
-	 * Retrieves the current chat object.
-	 * @returns A promise that resolves with the current chat object.
+	 * Retrieves the WhatsApp data.
+	 * @returns A promise that resolves with the WhatsApp data.
 	 */
-	getCurrentChatObject: () => Promise<TWhatsAppChat | undefined>;
-
-	/**
-	 * Retrieves the current contact object.
-	 * @returns A promise that resolves with the current contact object.
-	 */
-	getCurrentContactObject: () => Promise<TWhatsAppContact | undefined>;
-
-	/**
-	 * Retrieves the ID of the current chat.
-	 * @returns A promise that resolves with the ID of the current chat.
-	 */
-	getCurrentChatID: () => Promise<string>;
-
-	/**
-	 * Retrieves the phone number of the current chat.
-	 * @returns A promise that resolves with the phone number of the current chat.
-	 */
-	getCurrentChatPhoneNumber: () => Promise<string>;
-
-	/**
-	 * Retrieves the name of the current chat.
-	 * @returns A promise that resolves with the name of the current chat.
-	 */
-	getCurrentChatName: () => Promise<string | undefined>;
-
-	/**
-	 * Retrieves the messages of the current chat.
-	 * @returns A promise that resolves with the messages of the current chat.
-	 */
-	getCurrentChatMessages: () => Promise<TWhatsAppMessage[]>;
+	getData: () => Promise<TWhatsAppData | undefined>;
 
 	/**
 	 * Writes text in the current chat.
@@ -47,74 +25,33 @@ export interface IWhatsAppWeb {
 	 * @returns A promise that resolves when the text is written.
 	 */
 	writeInChat: (text: string) => Promise<void>;
-
-	/**
-	 * Fetches the media URL.
-	 * @param url - The URL of the media.
-	 * @returns A promise that resolves with the fetched media URL.
-	 */
-	fetchMediaURL: (url: string) => Promise<unknown>;
-}
+	// processMessage: (message: Message) => Promise<void>;
+};
 
 /**
  * Represents the WhatsApp Web object.
  */
-export const whatsAppWeb: IWhatsAppWeb = {
-	getCurrentChatObject: () => {
+export const whatsAppWeb: TWhatsAppWeb = {
+	getData: () => {
 		return new Promise((resolve) => {
-			executeScript(() => window.retrieveObject<TWhatsAppChat>('chat')).then((chat) => {
-				if (!chat || (chat && chat.id.indexOf('@g.') >= 0)) return resolve(undefined);
-				resolve(chat);
-			});
-		});
-	},
-	getCurrentContactObject: () => {
-		return new Promise((resolve) => {
-			whatsAppWeb.getCurrentChatObject().then((chat) => {
+			executeScript(() => window.retrieveObject<Chat | undefined>('chat')).then(async (chat) => {
 				if (!chat) return resolve(undefined);
 
-				const userID = chat.id.split('@')[0];
-				executeScript(() => window.retrieveObject<TWhatsAppContact>('contact'), [userID]).then(
-					(contact) => {
-						if (!contact || (contact && !(contact.name || contact.pushname))) {
-							return;
-						}
-						resolve(contact);
-					}
-				);
-			});
-		});
-	},
-	getCurrentChatID: () => {
-		return new Promise((resolve) => {
-			whatsAppWeb.getCurrentChatObject().then((chat) => {
-				if (!chat || (chat && chat.id.indexOf('@g.') >= 0)) return;
-				resolve(chat.id);
-			});
-		});
-	},
-	getCurrentChatPhoneNumber: () => {
-		return new Promise((resolve) => {
-			whatsAppWeb.getCurrentChatID().then((id: string) => {
-				if (!id) return;
-				const phoneNumber = `+${id.split('@')[0]}`;
-				resolve(phoneNumber);
-			});
-		});
-	},
-	getCurrentChatName: () => {
-		return new Promise((resolve) => {
-			whatsAppWeb.getCurrentChatObject().then((chat) => {
-				if (!chat) return resolve(undefined);
-				resolve(chat.name);
-			});
-		});
-	},
-	getCurrentChatMessages: () => {
-		return new Promise((resolve) => {
-			whatsAppWeb.getCurrentChatObject().then((chat) => {
-				if (!chat) return resolve([]);
-				resolve(chat.msgs);
+				const chatID = chat.id;
+				const messages = chat.msgs;
+				const [contactID] = chat.id.split('@');
+				const phoneNumbers = contactID.split('-').map((num) => `+${num}`);
+				const phoneNumber = phoneNumbers.length === 1 ? phoneNumbers[0] : phoneNumbers;
+
+				const contact = await executeScript(
+					() => window.retrieveObject<Contact | undefined>('contact'),
+					[contactID]
+				).then((contact) => {
+					if (!contact || (contact && !(contact.name || contact.pushname))) return undefined;
+					return contact;
+				});
+
+				resolve({ chat, chatID, contact, messages, phoneNumber });
 			});
 		});
 	},
@@ -130,19 +67,6 @@ export const whatsAppWeb: IWhatsAppWeb = {
 				dataTransfer.setData('text', text.replace("'", '"'));
 				input?.dispatchEvent(clipboardEvent);
 			}).then(() => resolve());
-		});
-	},
-	fetchMediaURL: (url) => {
-		return new Promise((resolve, reject) => {
-			const request = new XMLHttpRequest();
-			request.onreadystatechange = function () {
-				if (this.readyState === 4) {
-					return this.status === 200 ? resolve(this) : reject;
-				}
-			};
-			request.responseType = 'arraybuffer';
-			request.open('GET', url);
-			request.send();
 		});
 	}
 };

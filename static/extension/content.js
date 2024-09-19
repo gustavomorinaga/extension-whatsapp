@@ -1,4 +1,4 @@
-const extensionWidthSize = 512;
+const extensionWidthSize = 360;
 
 var UID = {
 	_current: 0,
@@ -32,13 +32,14 @@ iframe.style.cssText = `
   right: 0;
   display: block;
   width: ${extensionWidthSize}px;
+  max-width: ${extensionWidthSize}px;
   height: 100%;
   z-index: 100;
   border: none;
 `;
 
 function init() {
-	handleDealPreSelection();
+	windowOpenListener();
 	setup();
 }
 
@@ -117,10 +118,30 @@ function buildStylesheetTag(href) {
 	return tag;
 }
 
-function handleDealPreSelection() {
-	const params = new URLSearchParams(window.location.search);
-	const dealIdToPreselect = params.get('deal_id');
-	if (dealIdToPreselect) chrome.storage.local.set({ dealIdToPreselect });
+function windowOpenListener() {
+	const script = document.body.appendChild(document.createElement('script'));
+	script.src = chrome.runtime.getURL('extension/interceptor.js');
+
+	window.addEventListener('openWhatsAppChat', function ({ detail: { url } }) {
+		handleDealPreselection(url);
+	});
+}
+
+function handleDealPreselection(url) {
+	const params = new URLSearchParams(url);
+	const dealId = params.get('deal_id');
+	const contactId = params.get('contact_id');
+	const instanceId = params.get('instance_id');
+
+	if (contactId && dealId) {
+		chrome.storage.local.set({
+			preselection: {
+				dealId,
+				contactId,
+				instanceId
+			}
+		});
+	}
 }
 
 init();

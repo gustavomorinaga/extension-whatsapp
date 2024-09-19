@@ -4,51 +4,20 @@
 	import { Spinner } from '$lib/components/ui/spinner';
 	import { whatsAppWeb } from '$lib/utils';
 	import Info from 'lucide-svelte/icons/info';
-	import type { TWhatsAppChat, TWhatsAppContact, TWhatsAppMessage } from '$lib/ts';
-
-	type TWhatsAppData = {
-		currentChatID: string;
-		currentChatMessages: Array<TWhatsAppMessage>;
-		currentChatName?: string;
-		currentChatObject: TWhatsAppChat;
-		currentChatPhoneNumber: string;
-		currentContactObject: TWhatsAppContact;
-	};
 </script>
 
 <script lang="ts">
-	let data: Partial<TWhatsAppData>;
+	let data: Awaited<ReturnType<typeof whatsAppWeb.getData>>;
 	let state: 'idle' | 'loading' | 'success' | Error = 'idle';
 
 	async function getData() {
 		state = 'loading';
 
 		try {
-			const currentChatObject = await whatsAppWeb.getCurrentChatObject();
-			if (!currentChatObject) throw new Error('No chat is open.');
+			const chat = await whatsAppWeb.getData();
+			if (!chat) throw new Error('No chat is open.');
 
-			const [
-				currentChatID,
-				currentChatMessages,
-				currentChatName,
-				currentChatPhoneNumber,
-				currentContactObject
-			] = await Promise.all([
-				whatsAppWeb.getCurrentChatID(),
-				whatsAppWeb.getCurrentChatMessages(),
-				whatsAppWeb.getCurrentChatName(),
-				whatsAppWeb.getCurrentChatPhoneNumber(),
-				whatsAppWeb.getCurrentContactObject()
-			]);
-
-			data = {
-				currentChatID,
-				currentChatMessages,
-				currentChatName,
-				currentChatObject,
-				currentChatPhoneNumber,
-				currentContactObject
-			};
+			data = chat;
 
 			state = 'success';
 		} catch (error) {
