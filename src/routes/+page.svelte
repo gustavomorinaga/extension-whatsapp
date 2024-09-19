@@ -1,9 +1,12 @@
 <script lang="ts" context="module">
 	import { Button } from '$lib/components/ui/button';
 	import { Center } from '$lib/components/ui/center';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
 	import { Spinner } from '$lib/components/ui/spinner';
 	import { whatsAppWeb } from '$lib/utils';
 	import Info from 'lucide-svelte/icons/info';
+	import Send from 'lucide-svelte/icons/send';
 </script>
 
 <script lang="ts">
@@ -37,11 +40,21 @@
 		}
 	}
 
+	async function writeInChat(event: Event) {
+		event.preventDefault();
+		const form = event.target as HTMLFormElement;
+		const data = new FormData(form);
+		const message = data.get('message') as string;
+
+		await whatsAppWeb.writeInChat(message);
+		form.reset();
+	}
+
 	$: if (data) console.log('📞 Extension for WhatsApp', data);
 </script>
 
 <article class="relative flex flex-1 flex-col gap-4 py-8">
-	<section class="sticky top-0 -mx-8 -mt-8 flex flex-col gap-8 bg-background p-8">
+	<section class="sticky top-0 z-10 -mx-8 -mt-8 flex flex-col gap-8 bg-background p-8">
 		<header class="text-center">
 			<h1 class="mb-4 text-2xl font-extrabold">Extension for WhatsApp</h1>
 			<p class="text-balance text-sm text-muted-foreground">
@@ -57,6 +70,26 @@
 				Get Data
 			{/if}
 		</Button>
+
+		<form class="flex items-end gap-2" on:submit={writeInChat}>
+			<div class="flex flex-1 flex-col gap-1.5">
+				<Label for="message">Write Message</Label>
+				<Input
+					type="text"
+					id="message"
+					name="message"
+					placeholder="Insert a message..."
+					autocapitalize="on"
+					autocomplete="off"
+					autocorrect="on"
+				/>
+			</div>
+
+			<Button size="icon" type="submit">
+				<Send class="size-6 shrink-0" />
+				<span class="sr-only select-none">Send</span>
+			</Button>
+		</form>
 	</section>
 
 	{#if state === 'success'}
@@ -67,9 +100,9 @@
 				</pre>
 			</section>
 		{:else}
-			<Center>
-				<Info class="h-12 w-12 text-muted-foreground" />
-				<p class="text-center text-muted-foreground">No data found.</p>
+			<Center class="text-muted-foreground">
+				<Info class="size-12 shrink-0" />
+				<p class="text-center">No data found.</p>
 			</Center>
 		{/if}
 

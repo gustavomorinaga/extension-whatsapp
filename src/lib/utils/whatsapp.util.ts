@@ -85,14 +85,21 @@ export const whatsAppWeb: TWhatsAppWeb = {
 	},
 	writeInChat: async (text) => {
 		try {
-			const dataTransfer = new DataTransfer();
-			const input = document.querySelector('#main footer [contenteditable~=true]');
-			const clipboardEvent = new ClipboardEvent('paste', {
-				bubbles: true,
-				clipboardData: dataTransfer
-			});
-			dataTransfer.setData('text', text.replace("'", '"'));
-			input?.dispatchEvent(clipboardEvent);
+			executeScript(
+				(text) => {
+					if (!text) return;
+
+					const dataTransfer = new DataTransfer();
+					const input = document.querySelector('#main footer [contenteditable~=true]');
+					const clipboardEvent = new ClipboardEvent('paste', {
+						bubbles: true,
+						clipboardData: dataTransfer
+					});
+					dataTransfer.setData('text', text.replace("'", '"'));
+					input?.dispatchEvent(clipboardEvent);
+				},
+				[text]
+			);
 		} catch (error) {
 			console.error('Error writing in chat:', error);
 		}
