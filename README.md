@@ -21,20 +21,27 @@
 
 This project is a demo extension for WhatsApp, using SvelteKit. It is a simple project that demonstrates how to create a WhatsApp extension using SvelteKit.
 
-See the WhatsApp utility functions in the [`src/lib/utils/whatsapp.util.ts`](./src/lib/utils/whatsapp.util.ts) file.
+See the WhatsApp utility functions in the [`src/lib/utils`](./src/lib/utils) folder. There are three utility functions:
 
-For the extension to work correctly, use the entire extension `static/extension` folder and configure the extension in the `manifest.json` file.
+- [`decrypt-media.util.ts`](./src/lib/utils/decrypt-media.util.ts): Decrypt the media data from a given message.
+- [`scripting.util.ts`](./src/lib/utils/scripting.util.ts): Execute a script in the current page.
+- [`whatsapp.util.ts`](./src/lib/utils/whatsapp.util.ts): Get the data, process media and write message from the current page.
+
+For the extension to work correctly, use the entire extension [`static/extension`](./static/extension) folder and configure the extension in the [`manifest.json`](./static/manifest.json) file.
+
+> [!IMPORTANT]
+> The WhatsApp utility functions use the Node.js modules, so you need to resolve them in the browser context. For this, you can use Vite's [`define`](https://vitejs.dev/config/shared-options.html#define) and [`resolve.alias`](https://vitejs.dev/config/shared-options.html#resolve-alias) options in the [`vite.config.ts`](./vite.config.ts) file.
 
 ## Features
 
-- **Chat**: You can access the current chat as object.
-- **Contact**: You can access the current contact as object.
-- **Chat ID**: You can access the current chat ID.
-- **Phone Number**: You can access the phone number of the current chat.
-- **Chat Name**: You can access the name of the current chat.
-- **Messages**: You can access the current messages as object.
-- **Send Message**: You can send a message to the current chat.
-- **Fetch Media**: You can fetch the media from the current chat.
+- **Get Data**: Get the data from the current page.
+  - **Chat**: Get the chat data from the current page.
+  - **Chat ID**: Get the chat ID from the current page.
+  - **Contact**: Get the contact data from the current page.
+  - **Messages**: Get the messages data from the current page.
+  - **Phone Number**: Get the phone number from the current page.
+- **Process Media**: Process the media data from the current page.
+- **Send Message**: Send a message to the current chat.
 
 ## Tech Stack
 
