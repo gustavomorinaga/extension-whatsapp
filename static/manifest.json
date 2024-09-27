@@ -3,7 +3,6 @@
 	"name": "Extension for WhatsApp",
 	"description": "Demo extension for WhatsApp, using SvelteKit",
 	"version": "0.0.1",
-
 	"permissions": ["activeTab", "scripting", "storage", "tabs"],
 	"host_permissions": ["https://web.whatsapp.com/*"],
 	"action": {
