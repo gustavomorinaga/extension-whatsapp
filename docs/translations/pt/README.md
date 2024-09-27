@@ -34,7 +34,7 @@ Veja as funções utilitárias do WhatsApp na pasta [`src/lib/utils`](/src/lib/u
 
 Para que a extensão funcione corretamente, use toda a pasta de extensão [`static/extension`](/static/extension) e configure a extensão no arquivo [`manifest.json`](/static/manifest.json).
 
-> [!IMPORTANTE]
+> [!IMPORTANT]
 > As funções utilitárias do WhatsApp utilizam módulos do Node.js, então você precisará resolvê-los no contexto do navegador. Para isso, você pode usar as opções [`define`](https://vitejs.dev/config/shared-options.html#define) e [`resolve.alias`](https://vitejs.dev/config/shared-options.html#resolve-alias) do Vite no arquivo [`vite.config.ts`](/vite.config.ts).
 
 ## 🌟 Funcionalidades
